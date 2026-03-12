@@ -18,7 +18,7 @@ help:
 test: test-core test-api
 
 test-core:
-	cd core/chaincodec && cargo test
+	cd core/chainmerge && cargo test
 
 test-api:
 	cd services/api && cargo test

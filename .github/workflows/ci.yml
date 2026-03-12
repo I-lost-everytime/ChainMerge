@@ -13,7 +13,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Test core
         run: cargo test
-        working-directory: core/chaincodec
+        working-directory: core/chainmerge
       - name: Test API
         run: cargo test
         working-directory: services/api
