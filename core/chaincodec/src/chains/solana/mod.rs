@@ -2,7 +2,9 @@ use serde_json::{json, Value};
 
 use crate::errors::DecodeError;
 use crate::traits::ChainDecoder;
-use crate::types::{Chain, DecodeRequest, EventType, NormalizedEvent, NormalizedTransaction};
+use crate::types::{
+    Action, ActionType, Chain, DecodeRequest, EventType, NormalizedEvent, NormalizedTransaction,
+};
 
 const TOKEN_PROGRAM_ID: &str = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
 const TOKEN_2022_PROGRAM_ID: &str = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
@@ -26,6 +28,18 @@ impl ChainDecoder for SolanaDecoder {
         let receiver = events.first().and_then(|e| e.to.clone());
         let value = events.first().and_then(|e| e.amount.clone());
 
+        let actions = events
+            .iter()
+            .map(|e| Action {
+                action_type: ActionType::Transfer,
+                from: e.from.clone(),
+                to: e.to.clone(),
+                amount: e.amount.clone(),
+                token: e.token.clone(),
+                metadata: None,
+            })
+            .collect();
+
         Ok(NormalizedTransaction {
             chain: Chain::Solana,
             tx_hash: request.tx_hash.clone(),
@@ -33,6 +47,7 @@ impl ChainDecoder for SolanaDecoder {
             receiver,
             value,
             events,
+            actions,
         })
     }
 }

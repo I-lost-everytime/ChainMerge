@@ -67,6 +67,34 @@ pub struct NormalizedEvent {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ActionType {
+    Transfer,
+    Swap,
+    NftTransfer,
+    Stake,
+    Bridge,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Action {
+    pub action_type: ActionType,
+
+    pub from: Option<String>,
+    pub to: Option<String>,
+
+    /// Primary amount involved in the action (e.g. sent amount)
+    pub amount: Option<String>,
+
+    /// Primary token/asset identifier (e.g. ERC-20 address, mint, denom)
+    pub token: Option<String>,
+
+    /// Optional extra data for richer actions (swap routes, pool, etc.)
+    pub metadata: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NormalizedTransaction {
     pub chain: Chain,
     pub tx_hash: String,
@@ -74,6 +102,10 @@ pub struct NormalizedTransaction {
     pub receiver: Option<String>,
     pub value: Option<String>,
     pub events: Vec<NormalizedEvent>,
+
+    /// High-level semantics derived from events/logs.
+    #[serde(default)]
+    pub actions: Vec<Action>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

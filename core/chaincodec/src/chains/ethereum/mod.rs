@@ -3,7 +3,9 @@ use serde_json::{json, Value};
 
 use crate::errors::DecodeError;
 use crate::traits::ChainDecoder;
-use crate::types::{Chain, DecodeRequest, EventType, NormalizedEvent, NormalizedTransaction};
+use crate::types::{
+    Action, ActionType, Chain, DecodeRequest, EventType, NormalizedEvent, NormalizedTransaction,
+};
 
 const ERC20_TRANSFER_TOPIC: &str =
     "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
@@ -34,6 +36,18 @@ impl ChainDecoder for EthereumDecoder {
         let receiver = events.first().and_then(|e| e.to.clone());
         let value = events.first().and_then(|e| e.amount.clone());
 
+        let actions = events
+            .iter()
+            .map(|e| Action {
+                action_type: ActionType::Transfer,
+                from: e.from.clone(),
+                to: e.to.clone(),
+                amount: e.amount.clone(),
+                token: e.token.clone(),
+                metadata: None,
+            })
+            .collect();
+
         Ok(NormalizedTransaction {
             chain: Chain::Ethereum,
             tx_hash: request.tx_hash.clone(),
@@ -41,6 +55,7 @@ impl ChainDecoder for EthereumDecoder {
             receiver,
             value,
             events,
+            actions,
         })
     }
 }

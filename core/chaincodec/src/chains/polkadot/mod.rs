@@ -1,7 +1,13 @@
 use serde_json::{json, Value};
 use crate::errors::DecodeError;
 use crate::traits::ChainDecoder;
-use crate::types::{Chain, DecodeRequest, EventType, NormalizedEvent, NormalizedTransaction};
+use crate::types::{
+    Action, ActionType, Chain, DecodeRequest, EventType, NormalizedEvent, NormalizedTransaction,
+};
+
+// Demo-only fallback key so the decoder works out of the box.
+// In production, override this via the POLKADOT_SUBSCAN_API_KEY env var.
+const DEMO_SUBSCAN_API_KEY: &str = "a57395d3167647c7b0adc2b6f48c0fb6";
 
 pub struct PolkadotDecoder;
 
@@ -22,6 +28,18 @@ impl ChainDecoder for PolkadotDecoder {
         let receiver = events.first().and_then(|e| e.to.clone());
         let value = events.first().and_then(|e| e.amount.clone());
 
+        let actions = events
+            .iter()
+            .map(|e| Action {
+                action_type: ActionType::Transfer,
+                from: e.from.clone(),
+                to: e.to.clone(),
+                amount: e.amount.clone(),
+                token: e.token.clone(),
+                metadata: None,
+            })
+            .collect();
+
         Ok(NormalizedTransaction {
             chain: Chain::Polkadot,
             tx_hash: request.tx_hash.clone(),
@@ -29,6 +47,7 @@ impl ChainDecoder for PolkadotDecoder {
             receiver,
             value,
             events,
+            actions,
         })
     }
 }
@@ -39,11 +58,11 @@ fn fetch_extrinsic_details(rpc_url: &str, tx_hash: &str) -> Result<Value, Decode
     let endpoint = format!("{}/api/scan/extrinsic", rpc_url.trim_end_matches('/'));
     let mut request = ureq::post(&endpoint).set("Content-Type", "application/json");
 
-    if let Ok(api_key) = std::env::var("POLKADOT_SUBSCAN_API_KEY") {
-        let trimmed = api_key.trim();
-        if !trimmed.is_empty() {
-            request = request.set("X-API-Key", trimmed);
-        }
+    // Prefer env var, otherwise fall back to demo key.
+    let api_key = std::env::var("POLKADOT_SUBSCAN_API_KEY").unwrap_or_else(|_| DEMO_SUBSCAN_API_KEY.to_string());
+    let trimmed = api_key.trim();
+    if !trimmed.is_empty() {
+        request = request.set("X-API-Key", trimmed);
     }
 
     let response = match request.send_json(payload) {

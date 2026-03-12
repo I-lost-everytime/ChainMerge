@@ -3,7 +3,9 @@ use serde_json::Value;
 use crate::chainrpc::get_json_with_failover;
 use crate::errors::DecodeError;
 use crate::traits::ChainDecoder;
-use crate::types::{Chain, DecodeRequest, EventType, NormalizedEvent, NormalizedTransaction};
+use crate::types::{
+    Action, ActionType, Chain, DecodeRequest, EventType, NormalizedEvent, NormalizedTransaction,
+};
 
 pub struct AptosDecoder;
 
@@ -24,6 +26,18 @@ impl ChainDecoder for AptosDecoder {
         let receiver = events.first().and_then(|e| e.to.clone());
         let value = events.first().and_then(|e| e.amount.clone());
 
+        let actions = events
+            .iter()
+            .map(|e| Action {
+                action_type: ActionType::Transfer,
+                from: e.from.clone(),
+                to: e.to.clone(),
+                amount: e.amount.clone(),
+                token: e.token.clone(),
+                metadata: None,
+            })
+            .collect();
+
         Ok(NormalizedTransaction {
             chain: Chain::Aptos,
             tx_hash: request.tx_hash.clone(),
@@ -31,6 +45,7 @@ impl ChainDecoder for AptosDecoder {
             receiver,
             value,
             events,
+            actions,
         })
     }
 }
