@@ -1,0 +1,17 @@
+{
+  "tx": {
+    "body": {
+      "messages": [
+        {
+          "@type": "/cosmos.bank.v1beta1.MsgSend",
+          "from_address": "cosmos1fromaddressxxxxxxxxxxxxxx",
+          "to_address": "cosmos1toaddressxxxxxxxxxxxxxxxx",
+          "amount": [
+            { "denom": "uatom", "amount": "12345" },
+            { "denom": "uosmo", "amount": "45" }
+          ]
+        }
+      ]
+    }
+  }
+}
