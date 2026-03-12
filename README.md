@@ -4,6 +4,7 @@ Unified multichain decoding infrastructure focused on deterministic, chain-agnos
 
 Quick docs:
 - Final overview: [FINAL_README.md](FINAL_README.md)
+- Setup (non-docker): [SETUP_README.md](SETUP_README.md)
 - Usage: [USAGE_README.md](USAGE_README.md)
 - Startup: [STARTUP_README.md](STARTUP_README.md)
 - RPC URLs: [rpcURLS.MD](rpcURLS.MD)
