@@ -5,9 +5,12 @@
  * as a proxy: content.js sends a message here, we fetch localhost, reply.
  */
 
+/* Firefox/Chrome compatibility shim */
+const _chr = (typeof browser !== 'undefined' && browser.runtime) ? browser : chrome;
+
 const DEFAULT_API_URL = 'http://localhost:8080';
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+_chr.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'CM_DECODE') {
     handleDecode(message).then(sendResponse).catch((err) => {
       sendResponse({ ok: false, error: err.message });

@@ -1,6 +1,9 @@
 /* content.js — ChainMerge TX Decoder Content Script */
 /* Injected into block explorer pages to detect and decode transactions */
 
+/* Firefox/Chrome compatibility shim */
+const _chr = (typeof browser !== 'undefined' && browser.runtime) ? browser : chrome;
+
 (function () {
   'use strict';
 
