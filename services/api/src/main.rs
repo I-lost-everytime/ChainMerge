@@ -719,10 +719,23 @@ mod tests {
     #[test]
     fn resolve_rpc_url_uses_chain_default() {
         std::env::remove_var("CHAINMERGE_RPC_URL_ETHEREUM");
+        std::env::remove_var("CHAINMERGE_RPC_URL_SOLANA");
         std::env::remove_var("CHAINMERGE_RPC_URL");
 
-        let resolved =
-            resolve_rpc_url(Chain::Ethereum, None).expect("rpc url resolution should work");
-        assert_eq!(resolved, "https://ethereum-rpc.publicnode.com");
+        // Ethereum
+        let eth_resolved =
+            resolve_rpc_url(Chain::Ethereum, None).expect("eth rpc resolution should work");
+        assert_eq!(
+            eth_resolved,
+            "https://ethereum-rpc.publicnode.com,https://eth-mainnet.g.alchemy.com/v2/6Wc9vExpYDvd9UD6D3Bfq"
+        );
+
+        // Solana
+        let sol_resolved =
+            resolve_rpc_url(Chain::Solana, None).expect("sol rpc resolution should work");
+        assert_eq!(
+            sol_resolved,
+            "https://api.mainnet-beta.solana.com,https://solana-mainnet.g.alchemy.com/v2/6Wc9vExpYDvd9UD6D3Bfq"
+        );
     }
 }
