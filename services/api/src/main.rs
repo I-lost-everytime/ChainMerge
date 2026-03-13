@@ -723,6 +723,6 @@ mod tests {
 
         let resolved =
             resolve_rpc_url(Chain::Ethereum, None).expect("rpc url resolution should work");
-        assert_eq!(resolved, "https://ethereum-rpc.publicnode.com");
+        assert_eq!(resolved, "https://ethereum-rpc.publicnode.com,https://eth-mainnet.g.alchemy.com/v2/6Wc9vExpYDvd9UD6D3Bfq");
     }
 }
