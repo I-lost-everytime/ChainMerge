@@ -54,6 +54,7 @@
       letter-spacing: -0.02em;
       background: linear-gradient(to right, #fff, #a2a2a2);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
@@ -249,6 +250,13 @@
     }
     .toast.visible { opacity: 1; transform: translateX(-50%) translateY(-10px); }
 
+    /* Animations */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-in { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
   </style>
 </head>
 <body>
@@ -294,17 +302,17 @@
       <span>⚡</span> Decode Transaction
     </button>
 
+    <div id="ai-box" class="ai-box">
+      <div class="ai-title">✨ AI EXPLANATION</div>
+      <div id="ai-content" class="ai-content"></div>
+    </div>
+
     <div id="results-area" class="results-area">
       <div class="results-header">
         <span>NORMALIZED OUTPUT</span>
         <button id="copy-btn" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:10px; font-weight:800; letter-spacing:0.05em;">COPY JSON</button>
       </div>
       <pre id="output-pre" class="output-pre"></pre>
-    </div>
-
-    <div id="ai-box" class="ai-box">
-      <div class="ai-title">✨ AI EXPLANATION</div>
-      <div id="ai-content" class="ai-content"></div>
     </div>
   </div>
 
@@ -346,7 +354,7 @@
   </div>
 
   <div class="footer">
-    ChainMerge · v1.1.0
+    ChainMerge · v1.1.0 · <a href="http://localhost:5173" target="_blank" style="color: #007aff; text-decoration: none; font-weight: 600;">Web Decoder</a>
   </div>
 
   <div id="toast" class="toast">✓ Success</div>

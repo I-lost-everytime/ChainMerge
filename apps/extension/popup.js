@@ -175,11 +175,17 @@ decodeBtn.addEventListener('click', async () => {
 
 function renderOutput(data) {
   resultsArea.style.display = 'block';
+  resultsArea.classList.remove('animate-in');
+  void resultsArea.offsetWidth; // Trigger reflow
+  resultsArea.classList.add('animate-in');
   outputPre.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
 }
 
 function renderError(msg) {
   resultsArea.style.display = 'block';
+  resultsArea.classList.remove('animate-in');
+  void resultsArea.offsetWidth;
+  resultsArea.classList.add('animate-in');
   outputPre.innerHTML = `<span style="color:var(--red)">${msg}</span>`;
 }
 
@@ -193,6 +199,9 @@ function setLoading(isLoading) {
 
 async function explainWithAi(decoded) {
   aiBox.style.display = 'block';
+  aiBox.classList.remove('animate-in');
+  void aiBox.offsetWidth;
+  aiBox.classList.add('animate-in');
   aiContent.innerHTML = `<div class="spinner" style="margin: 8px 0;"></div> Generating explanation...`;
 
   chrome.runtime.sendMessage({ 
