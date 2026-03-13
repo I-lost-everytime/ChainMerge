@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "ChainMerge · TX Decoder",
+  "version": "1.0.0",
+  "description": "Automatically decodes blockchain transactions on block explorers using ChainMerge and Gemini AI.",
+  "icons": {
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.etherscan.io/tx/*",
+        "*://*.bscscan.com/tx/*",
+        "*://*.polygonscan.com/tx/*",
+        "*://*.arbiscan.io/tx/*",
+        "*://*.optimistic.etherscan.io/tx/*",
+        "*://*.solscan.io/tx/*",
+        "*://solana.fm/tx/*",
+        "*://*.starkscan.co/tx/*",
+        "*://*.mintscan.io/*/txs/*"
+      ],
+      "js": ["content.js"],
+      "css": ["panel.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
