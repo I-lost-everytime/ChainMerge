@@ -3,23 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ChainMerge</title>
+  <title>ChainMerge Decoder</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #05070a;
-      --surface: rgba(255, 255, 255, 0.03);
-      --surface-hover: rgba(255, 255, 255, 0.06);
-      --accent: #007aff;
-      --accent-grad: linear-gradient(135deg, #007aff, #5856d6);
-      --ink: #ffffff;
-      --ink-dim: #8e8e93;
-      --border: rgba(255, 255, 255, 0.1);
-      --green: #34c759;
-      --red: #ff3b30;
+      --bg: #080c14;
+      --surface: rgba(13, 21, 33, 0.75);
+      --surface-2: rgba(20, 32, 52, 0.65);
+      --glass-border: rgba(99, 160, 255, 0.12);
+      --glass-border-hover: rgba(99, 160, 255, 0.28);
+      --ink: #e8edf8;
+      --ink-dim: #8a97b0;
+      --accent: #4f8eff;
+      --accent-2: #7c5cfc;
+      --accent-glow: rgba(79, 142, 255, 0.35);
+      --green: #22d3a0;
+      --red: #f05b6e;
+      --radius: 12px;
       --glass: saturate(180%) blur(20px);
     }
 
@@ -30,13 +33,39 @@
       color: var(--ink);
       font-size: 13px;
       overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
+      position: relative;
+      min-height: 500px;
+    }
+
+    /* Animated background */
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: -1;
+      pointer-events: none;
+      animation: float 10s ease-in-out infinite;
+    }
+    .orb-1 {
+      width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(79,142,255,0.15) 0%, transparent 70%);
+      top: -50px; left: -50px;
+    }
+    .orb-2 {
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(124,92,252,0.12) 0%, transparent 70%);
+      bottom: -30px; right: -30px;
+      animation-delay: -5s;
+    }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(20px, 20px) scale(1.05); }
     }
 
     .header {
       background: rgba(255, 255, 255, 0.02);
       backdrop-filter: var(--glass);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--glass-border);
       padding: 16px;
       display: flex;
       align-items: center;
@@ -52,7 +81,7 @@
       font-size: 15px;
       font-weight: 700;
       letter-spacing: -0.02em;
-      background: linear-gradient(to right, #fff, #a2a2a2);
+      background: linear-gradient(135deg, #fff 30%, #8ab4f8 100%);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -65,7 +94,7 @@
       padding: 3px;
       margin: 16px 16px 0;
       border-radius: 12px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--glass-border);
     }
     .tab-btn {
       flex: 1;
@@ -93,7 +122,7 @@
     .section-title {
       font-size: 10px;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--ink-dim);
       margin-bottom: 10px;
@@ -112,8 +141,8 @@
     input[type="password"],
     select {
       width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
+      background: rgba(8, 14, 26, 0.7);
+      border: 1px solid var(--glass-border);
       border-radius: 10px;
       color: var(--ink);
       padding: 12px;
@@ -122,9 +151,9 @@
       transition: all 0.2s;
     }
     input:focus, select:focus {
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(8, 14, 26, 0.9);
       border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+      box-shadow: 0 0 0 4px rgba(79, 142, 255, 0.15);
     }
 
     .clear-btn {
@@ -147,7 +176,7 @@
 
     .btn-primary {
       width: 100%;
-      background: var(--accent-grad);
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
       color: #fff;
       border: none;
       border-radius: 12px;
@@ -155,20 +184,20 @@
       font-weight: 700;
       font-size: 13px;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s;
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      box-shadow: 0 8px 16px rgba(0, 122, 255, 0.2);
+      box-shadow: 0 8px 16px rgba(79, 142, 255, 0.25);
     }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(0, 122, 255, 0.3); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(79, 142, 255, 0.35); }
     .btn-primary:active { transform: translateY(0) scale(0.98); }
-    .btn-primary:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* Results */
     .results-area {
       margin-top: 20px;
-      background: rgba(0,0,0,0.4);
+      background: var(--surface);
       border-radius: 14px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--glass-border);
       overflow: hidden;
       display: none;
       backdrop-filter: var(--glass);
@@ -176,7 +205,7 @@
     .results-header {
       padding: 10px 14px;
       background: rgba(255, 255, 255, 0.04);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--glass-border);
       display: flex; align-items: center; justify-content: space-between;
       font-size: 11px; font-weight: 600;
       color: var(--ink-dim);
@@ -190,17 +219,18 @@
       max-height: 280px;
       white-space: pre-wrap;
       word-break: break-all;
+      color: #abb2bf;
     }
-    .json-key { color: #8ab4f8; }
-    .json-str { color: #81c995; }
-    .json-num { color: #f29900; }
+    .json-key { color: #61afef; }
+    .json-str { color: #98c379; }
+    .json-num { color: #d19a66; }
 
     /* AI Section */
     .ai-box {
       margin-top: 14px;
       padding: 16px;
-      background: linear-gradient(135deg, rgba(0, 122, 255, 0.08), rgba(88, 86, 214, 0.05));
-      border: 1px solid rgba(0, 122, 255, 0.2);
+      background: linear-gradient(135deg, rgba(79, 142, 255, 0.12) 0%, rgba(124, 92, 252, 0.08) 100%);
+      border: 1px solid var(--glass-border);
       border-radius: 14px;
       display: none;
       backdrop-filter: var(--glass);
@@ -216,13 +246,13 @@
     .status-pill {
       font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 99px;
     }
-    .status-pill.set { background: rgba(52, 199, 89, 0.15); color: var(--green); }
+    .status-pill.set { background: rgba(34, 211, 160, 0.15); color: var(--green); }
     .status-pill.unset { background: rgba(255, 59, 48, 0.1); color: var(--red); }
 
     .api-display {
-      background: rgba(255,255,255,0.03);
+      background: rgba(255, 255, 255, 0.03);
       padding: 12px; border-radius: 10px; font-family: monospace; font-size: 11.5px;
-      margin-bottom: 14px; border: 1px solid var(--border);
+      margin-bottom: 14px; border: 1px solid var(--glass-border);
       display: flex; justify-content: space-between; align-items: center;
     }
     .health-dot { width: 8px; height: 8px; border-radius: 50%; background: #444; }
@@ -231,7 +261,7 @@
 
     .footer {
       padding: 16px; text-align: center; font-size: 10px; color: var(--ink-dim);
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--glass-border);
       opacity: 0.6;
     }
 
@@ -260,6 +290,9 @@
   </style>
 </head>
 <body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
   <div class="header">
     <div class="header-left">
       <span class="header-icon">⛓</span>
@@ -330,18 +363,6 @@
       </div>
     </div>
 
-    <div class="input-group">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span class="section-title">Gemini API Key</span>
-        <span id="key-status" class="status-pill unset">Not Set</span>
-      </div>
-      <input type="password" id="gemini-key-input" placeholder="AIza...">
-      <div style="display:flex; gap:10px; margin-top:12px;">
-        <button id="save-key-btn" class="tab-btn" style="background:rgba(255,255,255,0.06); flex:1;">Save Key</button>
-        <button id="clear-key-btn" class="tab-btn" style="background:rgba(255, 59, 48, 0.1); color:var(--red); flex:1;">Clear</button>
-      </div>
-    </div>
-
     <div class="input-group" style="margin-top:24px;">
       <span class="section-title">API Server</span>
       <div class="api-display">
@@ -354,7 +375,7 @@
   </div>
 
   <div class="footer">
-    ChainMerge · v1.1.0 · <a href="http://localhost:5173" target="_blank" style="color: #007aff; text-decoration: none; font-weight: 600;">Web Decoder</a>
+    ChainMerge · v1.2.0 · <a href="http://localhost:5173" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">Web Decoder</a>
   </div>
 
   <div id="toast" class="toast">✓ Success</div>

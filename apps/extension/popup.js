@@ -1,5 +1,17 @@
 const DEFAULT_API_URL = 'http://localhost:8080';
 
+// ── Regex Helpers ─────────────────────────────────────────────
+const REGEX = {
+  ethereum: /^0x[a-fA-F0-9]{64}$/,
+  solana:   /^[1-9A-HJ-NP-Za-km-z]{32,88}$/,
+  bitcoin:  /^[a-fA-F0-9]{64}$/, // Simplified for TXID
+  cosmos:   /^[A-F0-9]{64}$/,
+  aptos:    /^0x[a-fA-F0-9]{60,66}$/, // Typically 32 bytes hex
+  sui:      /^[1-9A-HJ-NP-Za-km-z]{43,45}$/,
+  starknet: /^0x[a-fA-F0-9]{63,66}$/,
+  polkadot: /^0x[a-fA-F0-9]{64}$/
+};
+
 // ── Elements ──────────────────────────────────────────────────
 const tabBtns     = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
@@ -14,14 +26,6 @@ const copyBtn      = document.getElementById('copy-btn');
 const aiBox        = document.getElementById('ai-box');
 const aiContent    = document.getElementById('ai-content');
 
-const keyInput      = document.getElementById('gemini-key-input');
-const saveKeyBtn    = document.getElementById('save-key-btn');
-const clearKeyBtn   = document.getElementById('clear-key-btn');
-const keyStatus     = document.getElementById('key-status');
-
-const cmKeyInput      = document.getElementById('cm-key-input');
-const saveCmKeyBtn    = document.getElementById('save-cm-key-btn');
-const clearCmKeyBtn   = document.getElementById('clear-cm-key-btn');
 const cmKeyStatus     = document.getElementById('cm-key-status');
 
 const apiUrlInput   = document.getElementById('api-url-input');
@@ -31,19 +35,13 @@ const healthDot     = document.getElementById('health-dot');
 const toast         = document.getElementById('toast');
 
 let state = {
-  geminiApiKey: '',
   chainmergeApiKey: '',
   apiUrl: DEFAULT_API_URL,
   isDecoding: false
 };
 
 // ── Initialization ─────────────────────────────────────────────
-chrome.storage.local.get(['geminiApiKey', 'chainmergeApiKey', 'chainmergeApiUrl'], (res) => {
-  if (res.geminiApiKey) {
-    state.geminiApiKey = res.geminiApiKey;
-    keyInput.value = res.geminiApiKey;
-    setKeyStatus(keyStatus, true);
-  }
+chrome.storage.local.get(['chainmergeApiKey', 'chainmergeApiUrl'], (res) => {
   if (res.chainmergeApiKey) {
     state.chainmergeApiKey = res.chainmergeApiKey;
     cmKeyInput.value = res.chainmergeApiKey;
@@ -54,65 +52,106 @@ chrome.storage.local.get(['geminiApiKey', 'chainmergeApiKey', 'chainmergeApiUrl'
   updateApiDisplay(state.apiUrl);
   checkHealth(state.apiUrl);
   
-  detectTabContext();
+  initPopup();
 });
 
-// ── Tab Context Detection ──────────────────────────────────────
-async function detectTabContext() {
+async function initPopup() {
+  const detected = await detectAndFill();
+  if (detected) {
+    // If we automatically filled a hash, auto-decode it
+    handleDecode();
+  }
+}
+
+// ── Detection Logic ───────────────────────────────────────────
+async function detectAndFill() {
+  // 1. Try Tab Context first
+  const tabDetected = await detectFromTab();
+  if (tabDetected) {
+    fillForm(tabDetected.chain, tabDetected.hash);
+    showToast(`Detected ${tabDetected.chain} tx from page`);
+    return true;
+  }
+
+  // 2. Try Clipboard
+  const clipDetected = await detectFromClipboard();
+  if (clipDetected) {
+    fillForm(clipDetected.chain, clipDetected.hash);
+    showToast(`Found ${clipDetected.chain} hash in clipboard`);
+    return true;
+  }
+
+  return false;
+}
+
+async function detectFromTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab || !tab.url) return;
+  if (!tab || !tab.url) return null;
 
   try {
     const url = new URL(tab.url);
     const host = url.hostname;
     const path = url.pathname;
 
-    let detected = null;
-
     if (host.includes('etherscan.io') || host.includes('bscscan.com') || host.includes('polygonscan.com') || host.includes('arbiscan.io')) {
       const m = path.match(/\/tx\/(0x[a-fA-F0-9]{64})/);
-      if (m) detected = { chain: 'ethereum', hash: m[1] };
+      if (m) return { chain: 'ethereum', hash: m[1] };
     } else if (host.includes('solscan.io') || host.includes('solana.fm')) {
       const m = path.match(/\/tx\/([1-9A-HJ-NP-Za-km-z]{32,88})/);
-      if (m) detected = { chain: 'solana', hash: m[1] };
+      if (m) return { chain: 'solana', hash: m[1] };
     } else if (host.includes('starkscan.co')) {
       const m = path.match(/\/tx\/(0x[a-fA-F0-9]+)/);
-      if (m) detected = { chain: 'starknet', hash: m[1] };
+      if (m) return { chain: 'starknet', hash: m[1] };
     } else if (host.includes('mintscan.io')) {
       const m = path.match(/\/txs\/([A-F0-9]{64})/i);
-      if (m) detected = { chain: 'cosmos', hash: m[1] };
+      if (m) return { chain: 'cosmos', hash: m[1] };
     } else if (host.includes('aptoscan.com')) {
       const m = path.match(/\/tx\/(0x[a-fA-F0-9]+)/);
-      if (m) detected = { chain: 'aptos', hash: m[1] };
+      if (m) return { chain: 'aptos', hash: m[1] };
     } else if (host.includes('suiscan.xyz')) {
       const m = path.match(/\/tx\/([1-9A-HJ-NP-Za-km-z]+)/);
-      if (m) detected = { chain: 'sui', hash: m[1] };
-    }
-
-    if (detected) {
-      chainSelect.value = detected.chain;
-      hashInput.value = detected.hash;
-      clearHashBtn.style.display = 'flex';
-      showToast(`Detected ${detected.chain} transaction`);
+      if (m) return { chain: 'sui', hash: m[1] };
     }
   } catch (e) {}
+  return null;
 }
 
-// ── Auto-Detection Logic ───────────────────────────────────────
+async function detectFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    const val = text.trim();
+    if (!val) return null;
+
+    // Simple priority matching
+    if (REGEX.ethereum.test(val)) return { chain: 'ethereum', hash: val };
+    if (REGEX.solana.test(val))   return { chain: 'solana', hash: val };
+    if (REGEX.cosmos.test(val))   return { chain: 'cosmos', hash: val };
+    if (REGEX.bitcoin.test(val))  return { chain: 'bitcoin', hash: val };
+    if (REGEX.aptos.test(val))    return { chain: 'aptos', hash: val };
+    if (REGEX.sui.test(val))      return { chain: 'sui', hash: val };
+    if (REGEX.starknet.test(val)) return { chain: 'starknet', hash: val };
+  } catch (err) {
+    console.warn('Clipboard read failed:', err);
+  }
+  return null;
+}
+
+function fillForm(chain, hash) {
+  chainSelect.value = chain;
+  hashInput.value = hash;
+  clearHashBtn.style.display = 'flex';
+}
+
+// ── Event Listeners ──────────────────────────────────────────
 hashInput.addEventListener('input', () => {
   const val = hashInput.value.trim();
   clearHashBtn.style.display = val ? 'flex' : 'none';
   if (!val) return;
 
-  if (val.startsWith('0x') && val.length === 66) {
-    chainSelect.value = 'ethereum';
-  } 
-  else if (!val.startsWith('0x') && val.length >= 32 && val.length <= 88 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(val)) {
-    chainSelect.value = 'solana';
-  }
-  else if (!val.startsWith('0x') && val.length === 64 && /^[0-9a-fA-F]+$/.test(val)) {
-    chainSelect.value = 'bitcoin';
-  }
+  // Manual input detection
+  if (REGEX.ethereum.test(val)) chainSelect.value = 'ethereum';
+  else if (REGEX.solana.test(val)) chainSelect.value = 'solana';
+  else if (REGEX.bitcoin.test(val)) chainSelect.value = 'bitcoin';
 });
 
 clearHashBtn.addEventListener('click', () => {
@@ -121,22 +160,21 @@ clearHashBtn.addEventListener('click', () => {
   hashInput.focus();
 });
 
-// ── Tab Switching ──────────────────────────────────────────────
 tabBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     const tab = btn.dataset.tab;
     if (!tab) return;
-    
     tabBtns.forEach(b => b.classList.remove('active'));
     tabContents.forEach(c => c.classList.remove('active'));
-    
     btn.classList.add('active');
     document.getElementById(`${tab}-tab`).classList.add('active');
   });
 });
 
+decodeBtn.addEventListener('click', handleDecode);
+
 // ── Decode Logic ───────────────────────────────────────────────
-decodeBtn.addEventListener('click', async () => {
+async function handleDecode() {
   const chain = chainSelect.value;
   const hash = hashInput.value.trim();
 
@@ -160,9 +198,7 @@ decodeBtn.addEventListener('click', async () => {
 
     if (result && result.ok) {
       renderOutput(result.decoded);
-      if (state.geminiApiKey) {
-        explainWithAi(result.decoded);
-      }
+      explainWithAi(result.decoded);
     } else {
       renderError(result?.error || 'Decoding failed. Check if API is running.');
     }
@@ -171,12 +207,12 @@ decodeBtn.addEventListener('click', async () => {
   } finally {
     setLoading(false);
   }
-});
+}
 
 function renderOutput(data) {
   resultsArea.style.display = 'block';
   resultsArea.classList.remove('animate-in');
-  void resultsArea.offsetWidth; // Trigger reflow
+  void resultsArea.offsetWidth;
   resultsArea.classList.add('animate-in');
   outputPre.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
 }
@@ -206,7 +242,6 @@ async function explainWithAi(decoded) {
 
   chrome.runtime.sendMessage({ 
     type: 'CM_GEMINI_EXPLAIN', 
-    apiKey: state.geminiApiKey,
     decoded 
   }, (res) => {
     if (res && res.ok) {
@@ -236,25 +271,6 @@ clearCmKeyBtn.addEventListener('click', () => {
     setKeyStatus(cmKeyStatus, false);
     showToast('ChainMerge key cleared');
     checkHealth(state.apiUrl);
-  });
-});
-
-saveKeyBtn.addEventListener('click', () => {
-  const key = keyInput.value.trim();
-  if (!key) return;
-  chrome.storage.local.set({ geminiApiKey: key }, () => {
-    state.geminiApiKey = key;
-    setKeyStatus(keyStatus, true);
-    showToast('Gemini key saved!');
-  });
-});
-
-clearKeyBtn.addEventListener('click', () => {
-  chrome.storage.local.remove('geminiApiKey', () => {
-    state.geminiApiKey = '';
-    keyInput.value = '';
-    setKeyStatus(keyStatus, false);
-    showToast('Gemini key cleared');
   });
 });
 

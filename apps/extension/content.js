@@ -494,6 +494,47 @@ const _chr = (typeof browser !== 'undefined' && browser.runtime) ? browser : chr
     return lines.join('\n');
   }
 
+  // ── Clipboard Tracking ──────────────────────────────────────
+  const HASH_REGEX = {
+    ethereum: /0x[a-fA-F0-9]{64}/,
+    solana:   /[1-9A-HJ-NP-Za-km-z]{32,88}/,
+  };
+
+  document.addEventListener('copy', () => {
+    // Small delay to let the clipboard update
+    setTimeout(async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        const val = text.trim();
+        if (!val) return;
+
+        let detectedChain = null;
+        if (HASH_REGEX.ethereum.test(val)) detectedChain = 'ethereum';
+        else if (HASH_REGEX.solana.test(val)) detectedChain = 'solana';
+
+        if (detectedChain) {
+          showCmToast(`ChainMerge: ${detectedChain} hash captured!`);
+          chrome.storage.local.set({ lastCapturedHash: { chain: detectedChain, hash: val, time: Date.now() } });
+        }
+      } catch (err) {}
+    }, 100);
+  });
+
+  function showCmToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'cm-toast-popup';
+    toast.innerHTML = `
+      <span style="font-size:16px;">⛓</span>
+      <span>${msg}</span>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('visible'), 100);
+    setTimeout(() => {
+      toast.classList.remove('visible');
+      setTimeout(() => toast.remove(), 400);
+    }, 3000);
+  }
+
   // ── Utils ────────────────────────────────────────────────────
   function escapeHtml(str) {
     return String(str)

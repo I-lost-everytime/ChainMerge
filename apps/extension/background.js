@@ -10,6 +10,7 @@ const _chr = (typeof browser !== 'undefined' && browser.runtime) ? browser : chr
 
 const DEFAULT_API_URL = 'http://localhost:8080';
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+const HARDCODED_GEMINI_KEY = "AIzaSyDExbWVlYOyX0J3zEZ0aFR4K45qk1-Vsms";
 
 _chr.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'CM_DECODE') {
@@ -20,7 +21,7 @@ _chr.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === 'CM_GEMINI_EXPLAIN') {
-    handleGeminiExplain(message).then(sendResponse).catch((err) => {
+    handleGeminiExplain(message, HARDCODED_GEMINI_KEY).then(sendResponse).catch((err) => {
       sendResponse({ ok: false, error: err.message });
     });
     return true;
@@ -66,7 +67,7 @@ async function handleHealth({ apiUrl, apiKey }) {
   }
 }
 
-async function handleGeminiExplain({ apiKey, decoded }) {
+async function handleGeminiExplain({ decoded }, apiKey) {
   const prompt = buildPrompt(decoded);
   try {
     const res = await fetch(`${GEMINI_API_BASE}?key=${apiKey}`, {
@@ -97,6 +98,7 @@ function buildPrompt(tx) {
   function truncate(s, n=10) { return s && s.length > n*2+3 ? `${s.slice(0,n)}...${s.slice(-n)}` : s; }
 
   return `Explain this blockchain transaction in 2 simple sentences for a non-technical user.
+Keep the total response under 800 characters and ensure no sentence is cut off.
 Chain: ${tx.chain}
 Hash: ${truncate(tx.tx_hash)}
 Sender: ${truncate(tx.sender) || 'unknown'}

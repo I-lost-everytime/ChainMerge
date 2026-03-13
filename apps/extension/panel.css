@@ -252,7 +252,6 @@
 }
 
 /* ── AI Explanation ── */
-.cm-ai-section {}
 
 .cm-ai-title {
   display: flex;
@@ -367,3 +366,32 @@
   cursor: pointer;
 }
 .cm-footer-link:hover { text-decoration: underline; }
+
+/* ── Toast Popup (In-page) ── */
+.cm-toast-popup {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(8, 12, 20, 0.9);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(79, 142, 255, 0.3);
+  border-radius: 12px;
+  padding: 12px 18px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 2147483647;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.cm-toast-popup.visible {
+  transform: translateY(0);
+  opacity: 1;
+}
