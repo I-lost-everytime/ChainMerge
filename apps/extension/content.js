@@ -201,7 +201,7 @@ const _chr = (typeof browser !== 'undefined' && browser.runtime) ? browser : chr
       evCard.innerHTML = `
         <div class="cm-card-title">Transfer Details</div>
         ${event.token  ? row('Token',  `<span class="cm-value cm-highlight">${event.token}</span>`) : ''}
-        ${event.amount ? row('Amount', `<span class="cm-value cm-highlight">${formatAmount(event.amount)}</span>`) : ''}
+        ${event.amount ? row('Amount', `<span class="cm-value cm-highlight">${formatAmount(event.amount, chain)}</span>`) : ''}
         ${event.from   ? row('From',   `<span class="cm-value" title="${event.from}">${truncate(event.from)}</span>`) : ''}
         ${event.to     ? row('To',     `<span class="cm-value" title="${event.to}">${truncate(event.to)}</span>`) : ''}
       `;
@@ -281,21 +281,33 @@ const _chr = (typeof browser !== 'undefined' && browser.runtime) ? browser : chr
   function formatValue(val, chain) {
     const num = parseFloat(val);
     if (isNaN(num)) return val;
-    const symbol = chain === 'bitcoin' ? 'BTC'
-      : chain === 'solana'   ? 'SOL'
-      : chain === 'cosmos'   ? 'ATOM'
-      : 'ETH';
-    // Values often come as wei — detect big numbers
-    if (num > 1e15) {
-      return `${(num / 1e18).toFixed(4)} ${symbol}`;
+
+    const config = {
+      ethereum: { symbol: 'ETH',  dec: 18 },
+      solana:   { symbol: 'SOL',  dec: 9  },
+      cosmos:   { symbol: 'ATOM', dec: 6  },
+      bitcoin:  { symbol: 'BTC',  dec: 8  },
+      starknet: { symbol: 'ETH',  dec: 18 },
+    };
+
+    const c = config[chain] || { symbol: '', dec: 0 };
+    if (c.dec > 0 && num > 1000) {
+      return `${(num / Math.pow(10, c.dec)).toLocaleString(undefined, { maximumFractionDigits: 4 })} ${c.symbol}`;
     }
-    return `${num} ${symbol}`;
+    return `${num} ${c.symbol}`;
   }
 
-  function formatAmount(val) {
+  function formatAmount(val, chain) {
     const num = parseFloat(val);
     if (isNaN(num)) return val;
-    if (num > 1e15) return (num / 1e18).toLocaleString(undefined, { maximumFractionDigits: 4 });
+
+    // If it looks like a large raw number (wei/lamports), convert it
+    // Note: This is an approximation since we don't know the exact token's decimals here
+    // but we can guess based on the chain if it's the native asset.
+    if (num > 1000000) {
+      const dec = chain === 'solana' ? 9 : 18;
+      return (num / Math.pow(10, dec)).toLocaleString(undefined, { maximumFractionDigits: 4 });
+    }
     return num.toLocaleString(undefined, { maximumFractionDigits: 6 });
   }
 

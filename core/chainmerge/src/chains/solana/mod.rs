@@ -8,6 +8,7 @@ use crate::types::{
 
 const TOKEN_PROGRAM_ID: &str = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
 const TOKEN_2022_PROGRAM_ID: &str = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+const SYSTEM_PROGRAM_ID: &str = "11111111111111111111111111111111";
 
 pub struct SolanaDecoder;
 
@@ -18,7 +19,7 @@ impl ChainDecoder for SolanaDecoder {
 
     fn decode(&self, request: &DecodeRequest) -> Result<NormalizedTransaction, DecodeError> {
         let tx = fetch_transaction(&request.rpc_url, &request.tx_hash)?;
-        let events = extract_token_transfer_events(&tx);
+        let events = extract_transfer_events(&tx);
 
         if events.is_empty() {
             return Err(DecodeError::UnsupportedEvent);
@@ -91,7 +92,7 @@ fn fetch_transaction(rpc_url: &str, tx_hash: &str) -> Result<Value, DecodeError>
     Ok(result.clone())
 }
 
-fn extract_token_transfer_events(tx: &Value) -> Vec<NormalizedEvent> {
+fn extract_transfer_events(tx: &Value) -> Vec<NormalizedEvent> {
     let mut events = Vec::new();
 
     if let Some(instructions) = tx
@@ -131,7 +132,10 @@ fn maybe_push_transfer_event(instruction: &Value, events: &mut Vec<NormalizedEve
         return;
     };
 
-    if program_id != TOKEN_PROGRAM_ID && program_id != TOKEN_2022_PROGRAM_ID {
+    // Support Token Programs AND System Program
+    if program_id != TOKEN_PROGRAM_ID && 
+       program_id != TOKEN_2022_PROGRAM_ID && 
+       program_id != SYSTEM_PROGRAM_ID {
         return;
     }
 
@@ -151,29 +155,29 @@ fn maybe_push_transfer_event(instruction: &Value, events: &mut Vec<NormalizedEve
         return;
     };
 
-    let from = info
-        .get("source")
-        .and_then(Value::as_str)
-        .map(ToString::to_string);
-    let to = info
-        .get("destination")
-        .and_then(Value::as_str)
-        .map(ToString::to_string);
-    let token = info
-        .get("mint")
-        .and_then(Value::as_str)
-        .map(ToString::to_string);
-
-    let amount = info
-        .get("amount")
-        .and_then(Value::as_str)
-        .map(ToString::to_string)
-        .or_else(|| {
-            info.get("tokenAmount")
-                .and_then(|t| t.get("amount"))
-                .and_then(Value::as_str)
-                .map(ToString::to_string)
-        });
+    let (from, to, token, amount) = if program_id == SYSTEM_PROGRAM_ID {
+        // SOL Transfer
+        (
+            info.get("source").and_then(Value::as_str).map(ToString::to_string),
+            info.get("destination").and_then(Value::as_str).map(ToString::to_string),
+            None, // SOL doesn't have a mint address in this context
+            info.get("lamports").and_then(|v| v.as_u64()).map(|v| v.to_string()),
+        )
+    } else {
+        // SPL Token Transfer
+        (
+            info.get("source").and_then(Value::as_str).map(ToString::to_string),
+            info.get("destination").and_then(Value::as_str).map(ToString::to_string),
+            info.get("mint").and_then(Value::as_str).map(ToString::to_string),
+            info.get("amount").and_then(Value::as_str).map(ToString::to_string)
+                .or_else(|| {
+                    info.get("tokenAmount")
+                        .and_then(|t| t.get("amount"))
+                        .and_then(Value::as_str)
+                        .map(ToString::to_string)
+                }),
+        )
+    };
 
     events.push(NormalizedEvent {
         event_type: EventType::TokenTransfer,
@@ -188,9 +192,39 @@ fn maybe_push_transfer_event(instruction: &Value, events: &mut Vec<NormalizedEve
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-
-    use super::extract_token_transfer_events;
+    use super::extract_transfer_events;
     use crate::types::EventType;
+
+    #[test]
+    fn extracts_sol_transfer_from_system_program() {
+        let tx = json!({
+            "transaction": {
+                "message": {
+                    "instructions": [
+                        {
+                            "programId": "11111111111111111111111111111111",
+                            "parsed": {
+                                "type": "transfer",
+                                "info": {
+                                    "source": "sender_pubkey",
+                                    "destination": "receiver_pubkey",
+                                    "lamports": 1000000000
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "meta": { "innerInstructions": [] }
+        });
+
+        let events = extract_transfer_events(&tx);
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].amount.as_deref(), Some("1000000000"));
+        assert_eq!(events[0].from.as_deref(), Some("sender_pubkey"));
+        assert_eq!(events[0].to.as_deref(), Some("receiver_pubkey"));
+        assert!(events[0].token.is_none());
+    }
 
     #[test]
     fn extracts_spl_transfer_from_outer_instruction() {
@@ -215,7 +249,7 @@ mod tests {
             "meta": { "innerInstructions": [] }
         });
 
-        let events = extract_token_transfer_events(&tx);
+        let events = extract_transfer_events(&tx);
         assert_eq!(events.len(), 1);
         assert!(matches!(events[0].event_type, EventType::TokenTransfer));
         assert_eq!(events[0].amount.as_deref(), Some("1000"));
@@ -256,20 +290,20 @@ mod tests {
             }
         });
 
-        let events = extract_token_transfer_events(&tx);
+        let events = extract_transfer_events(&tx);
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].token.as_deref(), Some("mint_2022"));
         assert_eq!(events[0].amount.as_deref(), Some("420"));
     }
 
     #[test]
-    fn ignores_non_token_program_instructions() {
+    fn ignores_unknown_program_instructions() {
         let tx = json!({
             "transaction": {
                 "message": {
                     "instructions": [
                         {
-                            "programId": "11111111111111111111111111111111",
+                            "programId": "unknown_program_id",
                             "parsed": {
                                 "type": "transfer",
                                 "info": {
@@ -285,7 +319,7 @@ mod tests {
             "meta": { "innerInstructions": [] }
         });
 
-        let events = extract_token_transfer_events(&tx);
+        let events = extract_transfer_events(&tx);
         assert!(events.is_empty());
     }
 }

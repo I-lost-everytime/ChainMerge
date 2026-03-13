@@ -1,0 +1,317 @@
+﻿cargo :     Checking 
+chainmerge v0.1.0 (E:\C
+hainMerge\core\chainmer
+ge)
+At line:1 char:1
++ cargo check -p 
+chainmerge --tests 
+2>&1 | Out-File 
+-FilePath "e:\Chain ...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (    Checking    
+ ch...ore\chainmerg    
+e):String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+error[E0425]: cannot 
+find function `extract_
+transfer_events` in 
+this scope
+   --> src\chains\solan
+a\mod.rs:219:22
+    |
+219 |         let 
+events = extract_transf
+er_events(&tx);
+    |                  
+    ^^^^^^^^^^^^^^^^^^^
+^^^^ not found in this 
+scope
+    |
+note: these functions 
+exist but are 
+inaccessible
+   --> src\chains\aptos
+\mod.rs:63:1
+    |
+ 63 | fn extract_transf
+er_events(tx: &Value) 
+-> 
+Vec<NormalizedEvent> {
+    | ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^ 
+`crate::chains::aptos::
+extract_transfer_events
+`: not accessible
+    |
+   ::: src\chains\bitco
+in\mod.rs:64:1
+    |
+ 64 | fn extract_transf
+er_events(tx: &Value) 
+-> 
+Vec<NormalizedEvent> {
+    | ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^ 
+`crate::chains::bitcoin
+::extract_transfer_even
+ts`: not accessible
+    |
+   ::: src\chains\stark
+net\mod.rs:87:1
+    |
+ 87 | fn extract_transf
+er_events(receipt: 
+&Value) -> 
+Vec<NormalizedEvent> {
+    | ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^ `crate::chains::st
+arknet::extract_transfe
+r_events`: not 
+accessible
+    |
+   ::: src\chains\sui\m
+od.rs:80:1
+    |
+ 80 | fn extract_transf
+er_events(tx: &Value) 
+-> 
+Vec<NormalizedEvent> {
+    | ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^ 
+`crate::chains::sui::ex
+tract_transfer_events`:
+ not accessible
+help: consider 
+importing this function
+    |
+194 +     use crate::ch
+ains::solana::extract_t
+ransfer_events;
+    |
+
+error[E0425]: cannot 
+find function `extract_
+transfer_events` in 
+this scope
+   --> src\chains\solan
+a\mod.rs:250:22
+    |
+250 |         let 
+events = extract_transf
+er_events(&tx);
+    |                  
+    ^^^^^^^^^^^^^^^^^^^
+^^^^ not found in this 
+scope
+    |
+note: these functions 
+exist but are 
+inaccessible
+   --> src\chains\aptos
+\mod.rs:63:1
+    |
+ 63 | fn extract_transf
+er_events(tx: &Value) 
+-> 
+Vec<NormalizedEvent> {
+    | ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^ 
+`crate::chains::aptos::
+extract_transfer_events
+`: not accessible
+    |
+   ::: src\chains\bitco
+in\mod.rs:64:1
+    |
+ 64 | fn extract_transf
+er_events(tx: &Value) 
+-> 
+Vec<NormalizedEvent> {
+    | ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^ 
+`crate::chains::bitcoin
+::extract_transfer_even
+ts`: not accessible
+    |
+   ::: src\chains\stark
+net\mod.rs:87:1
+    |
+ 87 | fn extract_transf
+er_events(receipt: 
+&Value) -> 
+Vec<NormalizedEvent> {
+    | ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^ `crate::chains::st
+arknet::extract_transfe
+r_events`: not 
+accessible
+    |
+   ::: src\chains\sui\m
+od.rs:80:1
+    |
+ 80 | fn extract_transf
+er_events(tx: &Value) 
+-> 
+Vec<NormalizedEvent> {
+    | ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^ 
+`crate::chains::sui::ex
+tract_transfer_events`:
+ not accessible
+help: consider 
+importing this function
+    |
+194 +     use crate::ch
+ains::solana::extract_t
+ransfer_events;
+    |
+
+error[E0433]: failed 
+to resolve: use of 
+undeclared type 
+`EventType`
+   --> src\chains\solan
+a\mod.rs:252:48
+    |
+252 |         assert!(m
+atches!(events[0].event
+_type, EventType::Token
+Transfer));
+    |                  
+                       
+       ^^^^^^^^^ use 
+of undeclared type 
+`EventType`
+    |
+help: consider 
+importing this enum
+    |
+194 +     use crate::ty
+pes::EventType;
+    |
+
+error[E0425]: cannot 
+find function `extract_
+transfer_events` in 
+this scope
+   --> src\chains\solan
+a\mod.rs:291:22
+    |
+291 |         let 
+events = extract_transf
+er_events(&tx);
+    |                  
+    ^^^^^^^^^^^^^^^^^^^
+^^^^ not found in this 
+scope
+    |
+note: these functions 
+exist but are 
+inaccessible
+   --> src\chains\aptos
+\mod.rs:63:1
+    |
+ 63 | fn extract_transf
+er_events(tx: &Value) 
+-> 
+Vec<NormalizedEvent> {
+    | ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^ 
+`crate::chains::aptos::
+extract_transfer_events
+`: not accessible
+    |
+   ::: src\chains\bitco
+in\mod.rs:64:1
+    |
+ 64 | fn extract_transf
+er_events(tx: &Value) 
+-> 
+Vec<NormalizedEvent> {
+    | ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^ 
+`crate::chains::bitcoin
+::extract_transfer_even
+ts`: not accessible
+    |
+   ::: src\chains\stark
+net\mod.rs:87:1
+    |
+ 87 | fn extract_transf
+er_events(receipt: 
+&Value) -> 
+Vec<NormalizedEvent> {
+    | ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^ `crate::chains::st
+arknet::extract_transfe
+r_events`: not 
+accessible
+    |
+   ::: src\chains\sui\m
+od.rs:80:1
+    |
+ 80 | fn extract_transf
+er_events(tx: &Value) 
+-> 
+Vec<NormalizedEvent> {
+    | ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^ 
+`crate::chains::sui::ex
+tract_transfer_events`:
+ not accessible
+help: consider 
+importing this function
+    |
+194 +     use crate::ch
+ains::solana::extract_t
+ransfer_events;
+    |
+
+error[E0425]: cannot 
+find function `extract_
+token_transfer_events` 
+in this scope
+   --> src\chains\solan
+a\mod.rs:320:22
+    |
+320 |         let 
+events = extract_token_
+transfer_events(&tx);
+    |                  
+    ^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^ not found 
+in this scope
+
+Some errors have 
+detailed explanations: 
+E0425, E0433.
+For more information 
+about an error, try 
+`rustc --explain 
+E0425`.
+error: could not 
+compile `chainmerge` 
+(lib test) due to 5 
+previous errors
