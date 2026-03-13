@@ -92,34 +92,78 @@ const _chr = (typeof browser !== 'undefined' && browser.runtime) ? browser : chr
   // Toggle button
   const toggle = document.createElement('button');
   toggle.className = 'cm-toggle';
-  toggle.innerHTML = `<span class="cm-toggle-icon">⛓</span> CM`;
   toggle.title = 'Toggle ChainMerge Panel';
+  
+  const toggleIcon = document.createElement('span');
+  toggleIcon.className = 'cm-toggle-icon';
+  toggleIcon.textContent = '⛓';
+  toggle.appendChild(toggleIcon);
+  toggle.appendChild(document.createTextNode(' CM'));
   document.body.appendChild(toggle);
 
   // Panel container
   const panel = document.createElement('div');
   panel.className = 'cm-panel';
-  panel.innerHTML = `
-    <div class="cm-header">
-      <div class="cm-header-left">
-        <span style="font-size:18px;">⛓</span>
-        <span class="cm-logo-text">ChainMerge</span>
-      </div>
-      <div class="cm-header-right">
-        <button class="cm-close-btn" id="cm-close">✕</button>
-      </div>
-    </div>
-    <div class="cm-body" id="cm-body">
-      <div class="cm-loading">
-        <div class="cm-spinner"></div>
-        <span>Decoding transaction…</span>
-      </div>
-    </div>
-    <div class="cm-footer">
-      <span class="cm-footer-brand">Powered by ChainMerge SDK</span>
-      <a class="cm-footer-link" href="http://localhost:5173" target="_blank">Open Playground →</a>
-    </div>
-  `;
+
+  // Panel Header
+  const header = document.createElement('div');
+  header.className = 'cm-header';
+  
+  const headerLeft = document.createElement('div');
+  headerLeft.className = 'cm-header-left';
+  const logoIcon = document.createElement('span');
+  logoIcon.style.fontSize = '18px';
+  logoIcon.textContent = '⛓';
+  const logoText = document.createElement('span');
+  logoText.className = 'cm-logo-text';
+  logoText.textContent = 'ChainMerge';
+  headerLeft.appendChild(logoIcon);
+  headerLeft.appendChild(logoText);
+
+  const headerRight = document.createElement('div');
+  headerRight.className = 'cm-header-right';
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'cm-close-btn';
+  closeBtn.id = 'cm-close';
+  closeBtn.textContent = '✕';
+  headerRight.appendChild(closeBtn);
+
+  header.appendChild(headerLeft);
+  header.appendChild(headerRight);
+
+  // Panel Body
+  const panelBody = document.createElement('div');
+  panelBody.className = 'cm-body';
+  panelBody.id = 'cm-body';
+  
+  const loading = document.createElement('div');
+  loading.className = 'cm-loading';
+  const spinner = document.createElement('div');
+  spinner.className = 'cm-spinner';
+  const loadingText = document.createElement('span');
+  loadingText.textContent = 'Decoding transaction…';
+  loading.appendChild(spinner);
+  loading.appendChild(loadingText);
+  panelBody.appendChild(loading);
+
+  // Panel Footer
+  const footer = document.createElement('div');
+  footer.className = 'cm-footer';
+  const footerBrand = document.createElement('span');
+  footerBrand.className = 'cm-footer-brand';
+  footerBrand.textContent = 'Powered by ChainMerge SDK';
+  const footerLink = document.createElement('a');
+  footerLink.className = 'cm-footer-link';
+  footerLink.href = 'http://localhost:5173';
+  footerLink.target = '_blank';
+  footerLink.textContent = 'Open Playground →';
+  footer.appendChild(footerBrand);
+  footer.appendChild(footerLink);
+
+  panel.appendChild(header);
+  panel.appendChild(panelBody);
+  panel.appendChild(footer);
+
   document.body.appendChild(panel);
 
   // ── Toggle behaviour ─────────────────────────────────────────
@@ -181,14 +225,15 @@ const _chr = (typeof browser !== 'undefined' && browser.runtime) ? browser : chr
     // Whale & Risk detection
     const alerts = detectAlerts(tx, event);
 
-    body.innerHTML = '';
+    body.textContent = '';
 
-    // Chain + hash
+    // Chain row
     const chainRow = document.createElement('div');
     chainRow.className = 'cm-chain-row';
-    chainRow.innerHTML = `
-      <span class="cm-chain-badge">${emoji} ${chain}</span>
-    `;
+    const chainBadge = document.createElement('span');
+    chainBadge.className = 'cm-chain-badge';
+    chainBadge.textContent = `${emoji} ${chain}`;
+    chainRow.appendChild(chainBadge);
     body.appendChild(chainRow);
 
     const hashEl = document.createElement('div');
@@ -209,26 +254,71 @@ const _chr = (typeof browser !== 'undefined' && browser.runtime) ? browser : chr
     // Transaction card
     const card = document.createElement('div');
     card.className = 'cm-card';
-    card.innerHTML = `
-      <div class="cm-card-title">Transaction</div>
-      ${row('Type', `<span class="cm-event-badge cm-event-${eventType}">${formatEventType(eventType)}</span>`)}
-      ${row('Sender', `<span class="cm-value" title="${tx.sender || '—'}">${truncate(tx.sender)}</span>`)}
-      ${row('Receiver', `<span class="cm-value" title="${tx.receiver || '—'}">${truncate(tx.receiver)}</span>`)}
-      ${tx.value ? row('Value', `<span class="cm-value cm-highlight">${formatValue(tx.value, chain)}</span>`) : ''}
-    `;
+    const cardTitle = document.createElement('div');
+    cardTitle.className = 'cm-card-title';
+    cardTitle.textContent = 'Transaction';
+    card.appendChild(cardTitle);
+
+    const typeBadge = document.createElement('span');
+    typeBadge.className = `cm-event-badge cm-event-${eventType}`;
+    typeBadge.textContent = formatEventType(eventType);
+    card.appendChild(createRow('Type', typeBadge));
+
+    const senderVal = document.createElement('span');
+    senderVal.className = 'cm-value';
+    senderVal.title = tx.sender || '—';
+    senderVal.textContent = truncate(tx.sender);
+    card.appendChild(createRow('Sender', senderVal));
+
+    const receiverVal = document.createElement('span');
+    receiverVal.className = 'cm-value';
+    receiverVal.title = tx.receiver || '—';
+    receiverVal.textContent = truncate(tx.receiver);
+    card.appendChild(createRow('Receiver', receiverVal));
+
+    if (tx.value) {
+      const valueVal = document.createElement('span');
+      valueVal.className = 'cm-value cm-highlight';
+      valueVal.textContent = formatValue(tx.value, chain);
+      card.appendChild(createRow('Value', valueVal));
+    }
     body.appendChild(card);
 
     // Events card (if token transfer)
     if (event.token || event.amount) {
       const evCard = document.createElement('div');
       evCard.className = 'cm-card';
-      evCard.innerHTML = `
-        <div class="cm-card-title">Transfer Details</div>
-        ${event.token  ? row('Token',  `<span class="cm-value cm-highlight">${event.token}</span>`) : ''}
-        ${event.amount ? row('Amount', `<span class="cm-value cm-highlight">${formatAmount(event.amount, chain)}</span>`) : ''}
-        ${event.from   ? row('From',   `<span class="cm-value" title="${event.from}">${truncate(event.from)}</span>`) : ''}
-        ${event.to     ? row('To',     `<span class="cm-value" title="${event.to}">${truncate(event.to)}</span>`) : ''}
-      `;
+      const evTitle = document.createElement('div');
+      evTitle.className = 'cm-card-title';
+      evTitle.textContent = 'Transfer Details';
+      evCard.appendChild(evTitle);
+
+      if (event.token) {
+        const tokenVal = document.createElement('span');
+        tokenVal.className = 'cm-value cm-highlight';
+        tokenVal.textContent = event.token;
+        evCard.appendChild(createRow('Token', tokenVal));
+      }
+      if (event.amount) {
+        const amountVal = document.createElement('span');
+        amountVal.className = 'cm-value cm-highlight';
+        amountVal.textContent = formatAmount(event.amount, chain);
+        evCard.appendChild(createRow('Amount', amountVal));
+      }
+      if (event.from) {
+        const fromVal = document.createElement('span');
+        fromVal.className = 'cm-value';
+        fromVal.title = event.from;
+        fromVal.textContent = truncate(event.from);
+        evCard.appendChild(createRow('From', fromVal));
+      }
+      if (event.to) {
+        const toVal = document.createElement('span');
+        toVal.className = 'cm-value';
+        toVal.title = event.to;
+        toVal.textContent = truncate(event.to);
+        evCard.appendChild(createRow('To', toVal));
+      }
       body.appendChild(evCard);
     }
 
@@ -281,12 +371,19 @@ const _chr = (typeof browser !== 'undefined' && browser.runtime) ? browser : chr
   }
 
   // ── Render helpers ───────────────────────────────────────────
-  function row(label, valueHtml) {
-    return `
-      <div class="cm-row">
-        <span class="cm-label">${label}</span>
-        ${valueHtml}
-      </div>`;
+  function createRow(label, valueNode) {
+    const row = document.createElement('div');
+    row.className = 'cm-row';
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'cm-label';
+    labelSpan.textContent = label;
+    row.appendChild(labelSpan);
+    if (typeof valueNode === 'string') {
+      row.appendChild(document.createTextNode(valueNode));
+    } else {
+      row.appendChild(valueNode);
+    }
+    return row;
   }
 
   function formatEventType(t) {
@@ -366,72 +463,152 @@ const _chr = (typeof browser !== 'undefined' && browser.runtime) ? browser : chr
   function renderAiLoading(body) {
     const sec = getAiSection();
     if (!sec) return;
-    sec.innerHTML = `
-      <div class="cm-card">
-        <div class="cm-ai-title">
-          ✨ AI Explanation
-          <span class="cm-ai-badge">Gemini</span>
-        </div>
-        <div class="cm-ai-loading">
-          <div class="cm-spinner" style="width:14px;height:14px;border-width:2px;"></div>
-          Generating explanation…
-        </div>
-      </div>`;
+    sec.textContent = '';
+    
+    const card = document.createElement('div');
+    card.className = 'cm-card';
+    
+    const title = document.createElement('div');
+    title.className = 'cm-ai-title';
+    title.textContent = '✨ AI Explanation ';
+    const badge = document.createElement('span');
+    badge.className = 'cm-ai-badge';
+    badge.textContent = 'Gemini';
+    title.appendChild(badge);
+    
+    const loading = document.createElement('div');
+    loading.className = 'cm-ai-loading';
+    const spinner = document.createElement('div');
+    spinner.className = 'cm-spinner';
+    spinner.style.width = '14px';
+    spinner.style.height = '14px';
+    spinner.style.borderWidth = '2px';
+    const text = document.createElement('span');
+    text.textContent = 'Generating explanation…';
+    
+    loading.appendChild(spinner);
+    loading.appendChild(text);
+    card.appendChild(title);
+    card.appendChild(loading);
+    sec.appendChild(card);
   }
 
   function renderAiExplanation(body, text) {
     const sec = getAiSection();
     if (!sec) return;
-    sec.innerHTML = `
-      <div class="cm-card">
-        <div class="cm-ai-title">
-          ✨ AI Explanation
-          <span class="cm-ai-badge">Gemini</span>
-        </div>
-        <div class="cm-ai-text">${escapeHtml(text)}</div>
-      </div>`;
+    sec.textContent = '';
+
+    const card = document.createElement('div');
+    card.className = 'cm-card';
+    
+    const title = document.createElement('div');
+    title.className = 'cm-ai-title';
+    title.textContent = '✨ AI Explanation ';
+    const badge = document.createElement('span');
+    badge.className = 'cm-ai-badge';
+    badge.textContent = 'Gemini';
+    title.appendChild(badge);
+
+    const content = document.createElement('div');
+    content.className = 'cm-ai-text';
+    content.textContent = text;
+
+    card.appendChild(title);
+    card.appendChild(content);
+    sec.appendChild(card);
   }
 
   function renderAiError(body, msg) {
     const sec = getAiSection();
     if (!sec) return;
-    sec.innerHTML = `
-      <div class="cm-card">
-        <div class="cm-ai-title">
-          ✨ AI Explanation
-          <span class="cm-ai-badge">Gemini</span>
-        </div>
-        <div class="cm-ai-text" style="color:#f05b6e;font-size:11px;">
-          Could not generate explanation: ${escapeHtml(msg)}
-        </div>
-      </div>`;
+    sec.textContent = '';
+
+    const card = document.createElement('div');
+    card.className = 'cm-card';
+    
+    const title = document.createElement('div');
+    title.className = 'cm-ai-title';
+    title.textContent = '✨ AI Explanation ';
+    const badge = document.createElement('span');
+    badge.className = 'cm-ai-badge';
+    badge.textContent = 'Gemini';
+    title.appendChild(badge);
+
+    const content = document.createElement('div');
+    content.className = 'cm-ai-text';
+    content.style.color = '#f05b6e';
+    content.style.fontSize = '11px';
+    content.textContent = `Could not generate explanation: ${msg}`;
+
+    card.appendChild(title);
+    card.appendChild(content);
+    sec.appendChild(card);
   }
 
   function renderAiNoKey(body) {
     const sec = getAiSection();
     if (!sec) return;
-    sec.innerHTML = `
-      <div class="cm-card" style="text-align:center;padding:12px;">
-        <div style="color:#8a97b0;font-size:11px;line-height:1.6;">
-          ✨ <strong style="color:#e8edf8;">AI Explanations</strong> available<br>
-          Add your Gemini API key in the extension popup.
-        </div>
-      </div>`;
+    sec.textContent = '';
+
+    const card = document.createElement('div');
+    card.className = 'cm-card';
+    card.style.textAlign = 'center';
+    card.style.padding = '12px';
+    
+    const content = document.createElement('div');
+    content.style.color = '#8a97b0';
+    content.style.fontSize = '11px';
+    content.style.lineHeight = '1.6';
+
+    const text1 = document.createTextNode('✨ ');
+    const strong = document.createElement('strong');
+    strong.style.color = '#e8edf8';
+    strong.textContent = 'AI Explanations';
+    const text2 = document.createTextNode(' available');
+    const br = document.createElement('br');
+    const text3 = document.createTextNode('Add your Gemini API key in the extension popup.');
+
+    content.appendChild(text1);
+    content.appendChild(strong);
+    content.appendChild(text2);
+    content.appendChild(br);
+    content.appendChild(text3);
+    
+    card.appendChild(content);
+    sec.appendChild(card);
   }
 
   // ── Error State ───────────────────────────────────────────────
   function renderError(body, msg, apiBase) {
     const isOffline = msg.includes('fetch') || msg.includes('Failed') || msg.includes('NetworkError');
-    body.innerHTML = `
-      <div class="cm-error">
-        <div class="cm-error-icon">${isOffline ? '🔌' : '⚠'}</div>
-        <div class="cm-error-msg">${escapeHtml(msg)}</div>
-        <div class="cm-error-sub">${
-          isOffline
-            ? `Make sure the ChainMerge API is running at <code>${apiBase}</code>`
-            : 'This transaction type may not be supported yet.'
-        }</div>
-      </div>`;
+    body.textContent = '';
+
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'cm-error';
+    
+    const icon = document.createElement('div');
+    icon.className = 'cm-error-icon';
+    icon.textContent = isOffline ? '🔌' : '⚠';
+    
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'cm-error-msg';
+    msgDiv.textContent = msg;
+
+    const subDiv = document.createElement('div');
+    subDiv.className = 'cm-error-sub';
+    if (isOffline) {
+      subDiv.appendChild(document.createTextNode('Make sure the ChainMerge API is running at '));
+      const code = document.createElement('code');
+      code.textContent = apiBase;
+      subDiv.appendChild(code);
+    } else {
+      subDiv.textContent = 'This transaction type may not be supported yet.';
+    }
+
+    errorDiv.appendChild(icon);
+    errorDiv.appendChild(msgDiv);
+    errorDiv.appendChild(subDiv);
+    body.appendChild(errorDiv);
   }
 
   // ── Gemini AI ────────────────────────────────────────────────
@@ -523,10 +700,17 @@ const _chr = (typeof browser !== 'undefined' && browser.runtime) ? browser : chr
   function showCmToast(msg) {
     const toast = document.createElement('div');
     toast.className = 'cm-toast-popup';
-    toast.innerHTML = `
-      <span style="font-size:16px;">⛓</span>
-      <span>${msg}</span>
-    `;
+    
+    const icon = document.createElement('span');
+    icon.style.fontSize = '16px';
+    icon.textContent = '⛓';
+    
+    const text = document.createElement('span');
+    text.textContent = msg;
+
+    toast.appendChild(icon);
+    toast.appendChild(text);
+    
     document.body.appendChild(toast);
     setTimeout(() => toast.classList.add('visible'), 100);
     setTimeout(() => {

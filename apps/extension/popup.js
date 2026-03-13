@@ -214,7 +214,10 @@ function renderOutput(data) {
   resultsArea.classList.remove('animate-in');
   void resultsArea.offsetWidth;
   resultsArea.classList.add('animate-in');
-  outputPre.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+  
+  outputPre.textContent = '';
+  const highlightedNodes = syntaxHighlightToNodes(JSON.stringify(data, null, 2));
+  highlightedNodes.forEach(node => outputPre.appendChild(node));
 }
 
 function renderError(msg) {
@@ -222,15 +225,30 @@ function renderError(msg) {
   resultsArea.classList.remove('animate-in');
   void resultsArea.offsetWidth;
   resultsArea.classList.add('animate-in');
-  outputPre.innerHTML = `<span style="color:var(--red)">${msg}</span>`;
+  
+  outputPre.textContent = '';
+  const errorSpan = document.createElement('span');
+  errorSpan.style.color = 'var(--red)';
+  errorSpan.textContent = msg;
+  outputPre.appendChild(errorSpan);
 }
 
 function setLoading(isLoading) {
   state.isDecoding = isLoading;
   decodeBtn.disabled = isLoading;
-  decodeBtn.innerHTML = isLoading 
-    ? `<div class="spinner"></div> Decoding...` 
-    : `<span>⚡</span> Decode Transaction`;
+  decodeBtn.textContent = '';
+  
+  if (isLoading) {
+    const spinner = document.createElement('div');
+    spinner.className = 'spinner';
+    decodeBtn.appendChild(spinner);
+    decodeBtn.appendChild(document.createTextNode(' Decoding...'));
+  } else {
+    const icon = document.createElement('span');
+    icon.textContent = '⚡';
+    decodeBtn.appendChild(icon);
+    decodeBtn.appendChild(document.createTextNode(' Decode Transaction'));
+  }
 }
 
 async function explainWithAi(decoded) {
@@ -238,16 +256,27 @@ async function explainWithAi(decoded) {
   aiBox.classList.remove('animate-in');
   void aiBox.offsetWidth;
   aiBox.classList.add('animate-in');
-  aiContent.innerHTML = `<div class="spinner" style="margin: 8px 0;"></div> Generating explanation...`;
+  
+  aiContent.textContent = '';
+  const spinner = document.createElement('div');
+  spinner.className = 'spinner';
+  spinner.style.margin = '8px 0';
+  aiContent.appendChild(spinner);
+  aiContent.appendChild(document.createTextNode(' Generating explanation...'));
 
   chrome.runtime.sendMessage({ 
     type: 'CM_GEMINI_EXPLAIN', 
     decoded 
   }, (res) => {
+    aiContent.textContent = '';
     if (res && res.ok) {
       aiContent.textContent = res.text;
     } else {
-      aiContent.innerHTML = `<span style="color:var(--red); font-size:10px;">AI Error: ${res?.error || 'Failed to generate explanation'}</span>`;
+      const errorSpan = document.createElement('span');
+      errorSpan.style.color = 'var(--red)';
+      errorSpan.style.fontSize = '10px';
+      errorSpan.textContent = `AI Error: ${res?.error || 'Failed to generate explanation'}`;
+      aiContent.appendChild(errorSpan);
     }
   });
 }
@@ -322,13 +351,41 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('visible'), 2500);
 }
 
-function syntaxHighlight(json) {
-  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+\.?\d*([eE][+-]?\d+)?)/g, (match) => {
-    let cls = 'json-num';
-    if (/^"/.test(match)) {
-      if (/:$/.test(match)) cls = 'json-key';
-      else cls = 'json-str';
+function syntaxHighlightToNodes(json) {
+  const nodes = [];
+  const regex = /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+\.?\d*([eE][+-]?\d+)?)/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(json)) !== null) {
+    // Text before the match
+    if (match.index > lastIndex) {
+      nodes.push(document.createTextNode(json.substring(lastIndex, match.index)));
     }
-    return `<span class="${cls}">${match}</span>`;
-  });
+
+    const value = match[0];
+    let cls = 'json-num';
+    if (/^"/.test(value)) {
+      if (/:$/.test(value)) cls = 'json-key';
+      else cls = 'json-str';
+    } else if (/true|false/.test(value)) {
+      cls = 'json-bool';
+    } else if (/null/.test(value)) {
+      cls = 'json-null';
+    }
+
+    const span = document.createElement('span');
+    span.className = cls;
+    span.textContent = value;
+    nodes.push(span);
+
+    lastIndex = regex.lastIndex;
+  }
+
+  // Remaining text
+  if (lastIndex < json.length) {
+    nodes.push(document.createTextNode(json.substring(lastIndex)));
+  }
+
+  return nodes;
 }
