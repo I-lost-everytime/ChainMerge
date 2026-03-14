@@ -1,0 +1,13 @@
+name: Keep API Alive
+
+on:
+  schedule:
+    - cron: "*/14 * * * *" # Runs every 14 minutes
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API
+        run: curl -sSf https://chainmerge-api.onrender.com/ > /dev/null || echo "API ping failed but workflow continues"
