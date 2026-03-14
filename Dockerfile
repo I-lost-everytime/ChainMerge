@@ -1,4 +1,4 @@
-FROM rust:1.80-slim-bookworm AS builder
+FROM rust:1.84-slim-bookworm AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y pkg-config libssl-dev build-essential
@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y ca-certificates libssl-dev curl && rm -
 WORKDIR /app
 
 # Copy the actual api binary from the builder
-COPY --from=builder /usr/src/app/target/release/chainmerge-api /app/chainmerge-api
+COPY --from=builder /usr/src/app/services/api/target/release/chainmerge-api /app/chainmerge-api
 
 # Create directory for SQLite DB
 RUN mkdir -p /app/data
