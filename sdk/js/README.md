@@ -25,7 +25,7 @@ const client = new ChainMergeClient({
 async function main() {
   const tx = await client.decodeTx({
     chain: "ethereum",
-    hash: "0xd5d0587189f3411699ae946baa2a7d3ebfaf13133f9014a22bab6948591611ad",
+    hash: "0x8999.......",
   });
 
   console.log("normalized tx:", tx);
