@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y ca-certificates libssl-dev && rm -rf /v
 WORKDIR /app
 
 # Copy the actual api binary from the builder
-COPY --from=builder /usr/src/app/target/release/chainmerge-api /app/chainmerge-api
+COPY --from=builder /usr/src/app/services/api/target/release/chainmerge-api /app/chainmerge-api
 
 # Create directory for SQLite DB if needed
 RUN mkdir -p /app/data
