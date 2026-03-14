@@ -1,0 +1,6 @@
+.env
+node_modules/
+packages/core-rust/target/
+packages/frontend/dist/
+.DS_Store
+Thumbs.dbnode_modules/

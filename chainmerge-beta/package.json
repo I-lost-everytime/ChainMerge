@@ -1,0 +1,18 @@
+{
+  "name": "chaincodec",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/api",
+    "packages/frontend",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=packages/api\" \"npm run dev --workspace=packages/frontend\"",
+    "build:rust": "cd packages/core-rust && cargo build --release",
+    "build:frontend": "npm run build --workspace=packages/frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
