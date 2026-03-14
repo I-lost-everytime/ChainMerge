@@ -44,8 +44,8 @@ graph TD
     end
 
     subgraph Action_Layer [🤖 IQ AI Agent Layer]
-        Agent1[Whale Watcher Agent]:::agent
-        Agent2[Arb & Risk Scanner Agent]:::agent
+        Agent1[Governance Analyzer Agent]:::agent
+        Agent2[DAO Proposal Sentiment Agent]:::agent
     end
 
     subgraph Blockchain_Networks [⛓️ L1/L2 Protocols]
@@ -129,9 +129,9 @@ sequenceDiagram
 2. **Dispatch to Agents** 📨 
    - The Orchestration layer (via a `chainSignals` module) funnels the unified `NormalizedTransaction` objects to subscribed agents based on logic patterns (e.g., chain ID, token addresses).
 3. **Decide & Act** 🧠 
-   - IQ AI agents ingest the uniform data. Optional deterministic LLM reasoning can evaluate risk arrays before executing on-chain functions (e.g., hedging or MEV arbs).
+   - IQ AI agents ingest the uniform data looking for `cosmos_proposal` or `smart_contract_call` events that map to major DAO actions. Optional deterministic LLM reasoning evaluates the proposal text or voting power distributions (e.g., automated delegation routing).
 4. **Observe & Iterate** 🔄 
-   - Feedback loops update agent behavior leveraging execution metrics while ChainMerge perpetually provides indexing signals.
+   - Feedback loops update agent behavior leveraging on-chain voting metrics while ChainMerge perpetually provides indexing signals.
 
 ---
 
@@ -158,12 +158,15 @@ sequenceDiagram
 
 ---
 
-## 🐋 5. First Agent: Whale Watcher & Arb Scout
+## 🏛️ 5. First Agent: On-Chain Governance Analyzer
+
+### 🎯 IQAI Track Alignment: Research & Knowledge Systems
+This agent directly fulfills the **"On-chain governance analysis agent"** project directions for the IQAI track.
 
 ### Concepts & Goals
-- **Objective**: Identify massive `token_transfer` events mapping to major stablecoin thresholds.
-- **Phase 1**: Passive logging & strategy evaluation testing.
-- **Phase 2**: Autonomous execution via IQ AI ADK.
+- **Objective**: Identify major governance interactions (e.g. `vote_cast`, `proposal_created`) across the multichain ecosystem to serve as a real-time monitor for DAO health and controversial proposals (Research & Intelligence).
+- **Phase 1**: Passive logging & NLP sentiment evaluation (Analysis).
+- **Phase 2**: Autonomous execution via IQ AI ADK to automatically delegate voting power or alert major stakeholders of governance attacks (Automation).
 
 ### Example Implementation
 
@@ -172,28 +175,26 @@ import type { NormalizedTransaction } from "chainmerge-sdk";
 
 export async function onNormalizedTransaction(tx: NormalizedTransaction) {
   for (const ev of tx.events) {
-    if (ev.event_type !== "token_transfer") continue;
+    if (ev.event_type !== "smart_contract_call" && ev.event_type !== "unsupported") continue;
 
-    // Monitor for thresholds over 1M USDC
-    const size = BigInt(ev.amount ?? "0");
-    const isWhale = size > 1_000_000n * 10n ** 6n; 
-
-    if (!isWhale) continue;
+    // Monitor for potential Governance Interactions mapping to known DAO contracts
+    const isGovernance = predictIfGovernance(tx);
+    if (!isGovernance) continue;
 
     // Phase 1: Logging & Diagnostics
-    console.info("🚨 [WhaleWatcher] Massive Move Detected:", {
+    console.info("🏛️ [GovernanceAnalyzer] DAO Activity Detected:", {
       chain: tx.chain,
       txHash: tx.tx_hash,
-      token: ev.token,
-      amount: ev.amount,
-      route: `${ev.from} -> ${ev.to}`,
+      sender: tx.sender,
+      potentialVotePower: guessVotingWeight(tx)
     });
 
     // Phase 2: Active Strategy Engine & Execution
     /*
-    const decision = await strategyEngine.evaluate({ tx, ev });
-    if (decision.type === "ARBITRAGE_OPPORTUNITY") {
-      await iqAgent.executeArb(decision.plan);
+    const decision = await strategyEngine.analyzeProposal({ tx, ev });
+    if (decision.type === "CONTROVERSIAL_PROPOSAL") {
+      await iqAgent.alertStakeholders(decision.summary);
+      await iqAgent.delegateToTrustedValidator(decision.dao);
     }
     */
   }
