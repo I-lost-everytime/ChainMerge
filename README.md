@@ -71,4 +71,4 @@ const tx = await client.decodeTx({ chain: "solana", hash: "..." });
 
 ---
 
-*Built with *
+*Built with love to open source *
